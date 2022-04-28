@@ -5,6 +5,7 @@ import {
 } from '@jupyterlab/application';
 import { WidgetTracker } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { ITranslator } from '@jupyterlab/translation';
 
 import { BlocklyEditorFactory } from './factory';
 import { IBlocklyManager } from './token';
@@ -21,12 +22,13 @@ const FACTORY = 'Blockly editor';
 const plugin: JupyterFrontEndPlugin<IBlocklyManager> = {
   id: 'jupyterlab-blocky:plugin',
   autoStart: true,
-  requires: [ILayoutRestorer, IRenderMimeRegistry],
+  requires: [ILayoutRestorer, IRenderMimeRegistry, ITranslator],
   provides: IBlocklyManager,
   activate: (
     app: JupyterFrontEnd,
     restorer: ILayoutRestorer,
-    rendermime: IRenderMimeRegistry
+    rendermime: IRenderMimeRegistry,
+    language: ITranslator
   ): IBlocklyManager => {
     console.log('JupyterLab extension jupyterlab-blocky is activated!');
 
@@ -35,6 +37,8 @@ const plugin: JupyterFrontEndPlugin<IBlocklyManager> = {
 
     // Creating the tracker for the document
     const tracker = new WidgetTracker<BlocklyEditor>({ namespace });
+
+    //const trans = translator.load('jupyterlab-blockly');
 
     // Handle state restoration.
     if (restorer) {
@@ -64,7 +68,11 @@ const plugin: JupyterFrontEndPlugin<IBlocklyManager> = {
 
       // The rendermime instance, necessary to render the outputs
       // after a code execution.
-      rendermime: rendermime
+      rendermime: rendermime,
+
+      // The translator instance, used for changing the language of Blockly,
+      // in accordance to the jupyterlab one.
+      translator: language
     });
 
     // Add the widget to the tracker when it's created
@@ -74,6 +82,8 @@ const plugin: JupyterFrontEndPlugin<IBlocklyManager> = {
         tracker.save(widget);
       });
       tracker.add(widget);
+
+      translator: language;
     });
     // Registering the widget factory
     app.docRegistry.addWidgetFactory(widgetFactory);
