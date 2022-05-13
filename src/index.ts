@@ -5,7 +5,8 @@ import {
 } from '@jupyterlab/application';
 import { WidgetTracker } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import { ITranslator } from '@jupyterlab/translation';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+// import { ITranslator } from '@jupyterlab/translation';
 
 import { BlocklyEditorFactory } from './factory';
 import { IBlocklyManager } from './token';
@@ -17,18 +18,23 @@ import { BlocklyEditor } from './widget';
 const FACTORY = 'Blockly editor';
 
 /**
+ * The id of the translation plugin.
+ */
+ const PLUGIN_ID = '@jupyterlab/translation-extension:plugin';
+
+/**
  * Initialization data for the jupyterlab-blocky extension.
  */
 const plugin: JupyterFrontEndPlugin<IBlocklyManager> = {
   id: 'jupyterlab-blocky:plugin',
   autoStart: true,
-  requires: [ILayoutRestorer, IRenderMimeRegistry, ITranslator],
+  requires: [ILayoutRestorer, IRenderMimeRegistry, ISettingRegistry],
   provides: IBlocklyManager,
   activate: (
     app: JupyterFrontEnd,
     restorer: ILayoutRestorer,
     rendermime: IRenderMimeRegistry,
-    language: ITranslator
+    settings: ISettingRegistry
   ): IBlocklyManager => {
     console.log('JupyterLab extension jupyterlab-blocky is activated!');
 
@@ -38,8 +44,31 @@ const plugin: JupyterFrontEndPlugin<IBlocklyManager> = {
     // Creating the tracker for the document
     const tracker = new WidgetTracker<BlocklyEditor>({ namespace });
 
-    //const trans = translator.load('jupyterlab-blockly');
+    function getSetting(setting: ISettingRegistry.ISettings): string {
+      // Read the settings and convert to the correct type
+      let currentLocale: string = setting.get('locale').composite as string;
+      return currentLocale;
+    }
 
+    // Wait for the application to be restored and
+    // for the settings for this plugin to be loaded
+    settings
+    .load(PLUGIN_ID)
+    .then(setting => {
+      // Read the settings
+      let currentLocale = getSetting(setting);
+
+      // Listen for our plugin setting changes using Signal
+     setting.changed.connect(getSetting);
+
+      // Get new language and call the function that modifies the language name accordingly.
+      // Also, make the transformation to have the name of the language package as in Blockly.
+      let language = currentLocale[currentLocale.length - 2].toUpperCase() + currentLocale[currentLocale.length - 1].toLowerCase();
+      console.log(`Current Language : '${language}'`);
+
+      // LOGIC to transmit language as a paramtere of type string.
+    });
+      
     // Handle state restoration.
     if (restorer) {
       // When restoring the app, if the document was open, reopen it
@@ -69,10 +98,6 @@ const plugin: JupyterFrontEndPlugin<IBlocklyManager> = {
       // The rendermime instance, necessary to render the outputs
       // after a code execution.
       rendermime: rendermime,
-
-      // The translator instance, used for changing the language of Blockly,
-      // in accordance to the jupyterlab one.
-      translator: language
     });
 
     // Add the widget to the tracker when it's created
@@ -82,8 +107,6 @@ const plugin: JupyterFrontEndPlugin<IBlocklyManager> = {
         tracker.save(widget);
       });
       tracker.add(widget);
-
-      translator: language;
     });
     // Registering the widget factory
     app.docRegistry.addWidgetFactory(widgetFactory);
