@@ -5,7 +5,6 @@ import * as Blockly from 'blockly';
 
 import BlocklyPy from 'blockly/python';
 import * as En from 'blockly/msg/en';
-import * as Fr from 'blockly/msg/fr';
 
 import { IBlocklyManager } from './token';
 import { TOOLBOX } from './utils';
@@ -26,8 +25,8 @@ export class BlocklyManager implements IBlocklyManager {
     this._toolbox = TOOLBOX;
     this._activeGenerator = BlocklyPy;
     this._generators = new Map<string, Blockly.Generator>();
-    //this._language = 'En'; // By default we choose English.
-    
+    this._language = 'En'; // By default we choose English.
+
     this._changed = new Signal<BlocklyManager, void>(this);
   }
 
@@ -47,11 +46,11 @@ export class BlocklyManager implements IBlocklyManager {
     return this._changed;
   }
 
-  set language(language: string){
+  set language(language: string) {
     this._language = language;
   }
 
-  get language(): string{
+  get language(): string {
     return this._language;
   }
 
@@ -68,18 +67,36 @@ export class BlocklyManager implements IBlocklyManager {
   }
 
   setlanguage(language: string): void {
-    this.language = language; 
+    this.language = language;
+    Private.importLanguageModule(language);
+  }
+}
 
-    // Set Blockly Language to English. 
-    if (language == 'En') {
-      // @ts-ignore
-      Blockly.setLocale(En);
-      console.log('Setting Blockly language to English.');
+namespace Private {
+  export async function importLanguageModule(language: string) {
+    let module: Promise<any>;
+    switch (language) {
+      case 'En':
+        module = import('blockly/msg/en');
+        break;
+      case 'Es':
+        module = import('blockly/msg/es');
+        break;
+      case 'Fr':
+        module = import('blockly/msg/fr');
+        break;
+      // Complete with all the cases.
+      // List of languages in blockly: https://github.com/google/blockly/tree/master/msg/js
+      // List of languages in Lab: https://github.com/jupyterlab/language-packs/tree/master/language-packs
+      default:
+        console.warn('Language not found. Loading english');
+        module = Promise.resolve(En);
+        break;
     }
-    else if (language == 'Fr') {
+
+    module.then(lang => {
       // @ts-ignore
-      Blockly.setLocale(Fr);
-      console.log('Setting Blockly language to French.');
-    }
+      Blockly.setLocale(lang);
+    });
   }
 }
