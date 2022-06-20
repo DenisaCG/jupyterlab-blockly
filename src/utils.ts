@@ -348,6 +348,15 @@ export const TOOLBOX = {
       colour: '290',
       custom: 'PROCEDURE',
       name: 'Functions'
+    },
+    {
+      kind: 'SEP'
+    },
+    {
+      kind: 'CATEGORY',
+      colour: '240',
+      custom: 'PROCEDURE',
+      name: 'Niryo One'
     }
   ]
 };

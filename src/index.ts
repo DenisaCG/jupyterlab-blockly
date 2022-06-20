@@ -208,4 +208,17 @@ const plugin: JupyterFrontEndPlugin<IBlocklyRegisty> = {
   }
 };
 
-export default plugin;
+// export default plugin;
+
+import { NEW_TOOLBOX } from './niryo-toolbox';
+
+const plugin2: JupyterFrontEndPlugin<void> = {
+  id: 'jupyterlab-blocky-ros:plugin',
+  autoStart: true,
+  activate: (app: JupyterFrontEnd, blockly: IBlocklyRegisty) => {
+    console.log('ROS plugin activated!');
+    blockly.registerToolbox('ROS-toolbox', NEW_TOOLBOX);
+  }
+};
+
+export default { plugin, plugin2 };
